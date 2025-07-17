@@ -54,7 +54,7 @@ export function ProductCard({ item, onAddToCart, onViewDetails }: ProductCardPro
         <div className="p-4" onClick={onViewDetails}>
           <h3 className="font-bold text-lg text-gray-800 mb-2 group-hover:text-orange-500 transition-colors">{item.name}</h3>
           <p className="text-gray-600 text-sm mb-3 line-clamp-2">{item.description}</p>
-          <div className="flex items-center justify-between">
+          <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <span className="text-xl font-bold text-orange-500">Rp {item.price.toLocaleString()}</span>
               {item.originalPrice && <span className="text-sm text-gray-400 line-through">Rp {item.originalPrice.toLocaleString()}</span>}

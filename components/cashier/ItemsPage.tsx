@@ -384,11 +384,7 @@ export function ItemsPage({ menuItems, setMenuItems, categories, setCategories }
                     </div>
                     <div className="flex items-center space-x-2">
                       <Badge variant="outline">{item.category}</Badge>
-                      {item.options && Object.keys(item.options).length > 0 && (
-                        <Badge variant="secondary" className="text-xs">
-                          {Object.keys(item.options).length} Options
-                        </Badge>
-                      )}
+                      {item.options && Object.keys(item.options).length > 0 && <Badge className="text-xs bg-orange-500 text-white">{Object.keys(item.options).length} Options</Badge>}
                     </div>
                   </div>
                 </CardContent>

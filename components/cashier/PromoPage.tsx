@@ -147,14 +147,14 @@ export function PromoPage({ menuItems, cart, setCart, onOrderComplete }: PromoPa
                         <span className="text-xl font-bold text-red-600">Rp {item.price.toLocaleString()}</span>
                         {item.originalPrice && <span className="text-sm text-gray-400 line-through">Rp {item.originalPrice.toLocaleString()}</span>}
                       </div>
-                      <div className="flex flex-col items-end space-y-1">
+                      <div className="flex flex-col items-end space-y-1 text-xs leading-tight">
                         {item.originalPrice && (
-                          <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
+                          <Badge variant="outline" className="text-green-600 border-green-600 text-[10px]">
                             Hemat Rp {(item.originalPrice - item.price).toLocaleString()}
                           </Badge>
                         )}
                         {item.options && Object.keys(item.options).length > 0 && (
-                          <Badge variant="secondary" className="text-xs">
+                          <Badge variant="secondary" className="bg-orange-100 text-orange-600 text-[10px]">
                             Dapat Disesuaikan
                           </Badge>
                         )}
