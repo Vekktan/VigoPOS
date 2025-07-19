@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Plus, Minus, Trash2, CreditCard, Smartphone, Banknote, X } from 'lucide-react';
 import { StatusIndicator } from '@/components/StatusIndicator';
 import type { CartItem, Order } from '@/app/cashier/page';
+import { supabase } from '@/lib/supabase';
 
 interface CartSidebarProps {
   cart: CartItem[];
@@ -156,14 +157,32 @@ ${getMotivationalQuote(customerPhone)}
         customerName,
         customerPhone,
         orderType: globalOrderType,
-
         paymentMethod: selectedPayment,
         total,
         status: 'accepted',
         timestamp: new Date(),
         source: 'cashier',
-        notes: globalNotes, // ✅ Tambahkan catatan umum ke Order
+        notes: globalNotes,
       };
+
+      // INSERT TRANSACTION TO SUPABASE
+      await supabase.from('transactions').insert([{
+        order_id: order.id,
+        customer_name: order.customerName,
+        customer_phone: order.customerPhone,
+        table_number: order.tableNumber || null,
+        order_type: order.orderType,
+        payment_method: order.paymentMethod,
+        status: order.status.toUpperCase(),
+        source: order.source.toUpperCase(),
+        items: order.items.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        total_price: order.total,
+        created_at: new Date().toISOString()
+      }]);
 
       setStatus('success');
 

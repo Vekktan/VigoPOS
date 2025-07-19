@@ -375,7 +375,7 @@ export default function CashierPage() {
       case 'notification':
         return <NotificationPage notifications={notifications} onNotificationAction={() => {}} />;
       case 'history':
-        return <HistoryPage orders={orders} />;
+        return <HistoryPage />;
       case 'items':
         return <ItemsPage />;
       case 'sales-report':

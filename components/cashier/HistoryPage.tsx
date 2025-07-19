@@ -1,21 +1,59 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Clock, MapPin, Phone, Search } from 'lucide-react';
 import type { Order } from '@/app/cashier/page';
+import { supabase } from '@/lib/supabase';
 
 interface HistoryPageProps {
   orders: Order[];
 }
 
-export function HistoryPage({ orders }: HistoryPageProps) {
+export function HistoryPage() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
+
+  useEffect(() => {
+    async function fetchOrders() {
+      setLoading(true);
+      setError(null);
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+      // Map Supabase data ke struktur yang dipakai komponen
+      setOrders(
+        (data || []).map((trx) => ({
+          id: trx.order_id,
+          customerName: trx.customer_name,
+          customerPhone: trx.customer_phone,
+          tableNumber: trx.table_number,
+          orderType: trx.order_type,
+          paymentMethod: trx.payment_method,
+          timestamp: new Date(trx.created_at),
+          status: trx.status?.toLowerCase() || 'accepted',
+          source: trx.source?.toLowerCase() || 'cashier',
+          items: trx.items || [],
+          total: trx.total_price,
+        }))
+      );
+      setLoading(false);
+    }
+    fetchOrders();
+  }, []);
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch = order.id.toLowerCase().includes(searchQuery.toLowerCase()) || order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) || order.customerPhone.includes(searchQuery);
