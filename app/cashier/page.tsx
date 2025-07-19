@@ -359,8 +359,6 @@ export default function CashierPage() {
       case 'menu':
         return (
           <MenuPage
-            menuItems={menuItems}
-            categories={categories}
             cart={cart}
             setCart={setCart}
             onOrderComplete={(order) => {
@@ -376,7 +374,7 @@ export default function CashierPage() {
       case 'history':
         return <HistoryPage orders={orders} />;
       case 'items':
-        return <ItemsPage menuItems={menuItems} setMenuItems={setMenuItems} categories={categories} setCategories={setCategories} />;
+        return <ItemsPage />;
       case 'sales-report':
         return <SalesReportPage orders={orders} />;
       case 'settings':

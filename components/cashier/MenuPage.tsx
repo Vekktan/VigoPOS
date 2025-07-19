@@ -8,20 +8,28 @@ import { ProductCard } from './ProductCard';
 import { ProductDetailModal } from './ProductDetailModal';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { MenuItem, CartItem, Category, Order } from '@/app/cashier/page';
+import { useItems } from '@/hooks/useItems';
+import { useCategories } from '@/hooks/useCategories';
 
-interface MenuPageProps {
-  menuItems: MenuItem[];
-  categories: Category[];
+export function MenuPage({ cart, setCart, onOrderComplete }: {
   cart: CartItem[];
   setCart: (cart: CartItem[]) => void;
   onOrderComplete: (order: Order) => void;
-}
-
-export function MenuPage({ menuItems, categories, cart, setCart, onOrderComplete }: MenuPageProps) {
+}) {
+  const { items: menuItems, loading: itemsLoading, error: itemsError } = useItems();
+  const { categories, loading: categoriesLoading, error: categoriesError } = useCategories();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [showCart, setShowCart] = useState(false);
+
+  // Loading and error state
+  if (itemsLoading || categoriesLoading) {
+    return <div className="flex items-center justify-center h-64"><span>Loading...</span></div>;
+  }
+  if (itemsError || categoriesError) {
+    return <div className="flex items-center justify-center h-64 text-red-600">{itemsError || categoriesError}</div>;
+  }
 
   const addToCart = (item: MenuItem, options?: { [key: string]: string[] }) => {
     try {
@@ -43,7 +51,7 @@ export function MenuPage({ menuItems, categories, cart, setCart, onOrderComplete
         });
       }
 
-      setCart((prev) => {
+      setCart((prev: CartItem[]) => {
         const existingIndex = prev.findIndex((cartItem) => cartItem.id === item.id && JSON.stringify(cartItem.selectedOptions) === JSON.stringify(selectedOptions));
 
         if (existingIndex >= 0) {

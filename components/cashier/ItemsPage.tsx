@@ -12,15 +12,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Package, Plus, Edit, Trash2, Tag, Percent, DollarSign } from 'lucide-react';
+import { Package, Plus, Edit, Trash2, Tag, Percent, DollarSign, Loader2 } from 'lucide-react';
 import type { MenuItem, Category } from '@/app/cashier/page';
-
-interface ItemsPageProps {
-  menuItems: MenuItem[];
-  setMenuItems: (items: MenuItem[]) => void;
-  categories: Category[];
-  setCategories: (categories: Category[]) => void;
-}
+import { useItems } from '@/hooks/useItems';
+import { useCategories } from '@/hooks/useCategories';
+import { toast } from '@/hooks/use-toast';
 
 interface ItemOption {
   id: string;
@@ -48,7 +44,10 @@ const availableIcons = [
   { value: '🧁', label: 'Cupcake' },
 ];
 
-export function ItemsPage({ menuItems, setMenuItems, categories, setCategories }: ItemsPageProps) {
+export function ItemsPage() {
+  const { items: menuItems, loading: itemsLoading, error: itemsError, createItem, updateItem, deleteItem } = useItems();
+  const { categories, loading: categoriesLoading, error: categoriesError, createCategory, updateCategory, deleteCategory } = useCategories();
+  
   const [showItemDialog, setShowItemDialog] = useState(false);
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -169,84 +168,115 @@ export function ItemsPage({ menuItems, setMenuItems, categories, setCategories }
     return Math.round(discountedPrice).toString();
   };
 
-  const handleSaveItem = () => {
-    if (!itemForm.name || !itemForm.price || !itemForm.category) return;
-
-    let finalPrice = Number.parseInt(itemForm.price);
-    let originalPrice = undefined;
-
-    // Handle discount calculation
-    if (itemForm.isPromo && itemForm.discountPercentage) {
-      originalPrice = Number.parseInt(itemForm.price);
-      const discount = Number.parseFloat(itemForm.discountPercentage);
-      finalPrice = Math.round(originalPrice - (originalPrice * discount) / 100);
-    }
-
-    // Convert options to the format expected by MenuItem
-    const options: MenuItem['options'] = {};
-    itemForm.options.forEach((option) => {
-      if (option.name && option.values.filter((v) => v.name.trim()).length > 0) {
-        const optionKey = option.name.toLowerCase().replace(/\s+/g, '');
-        options[optionKey] = {
-          type: option.type,
-          required: option.required,
-          values: option.values.filter((v) => v.name.trim()),
-        };
-      }
-    });
-
-    const newItem: MenuItem = {
-      id: editingItem?.id || `item-${Date.now()}`,
-      name: itemForm.name,
-      description: itemForm.description,
-      price: finalPrice,
-      originalPrice: originalPrice,
-      category: itemForm.category,
-      image: itemForm.image || '/placeholder.svg?height=200&width=200',
-      isPromo: itemForm.isPromo,
-      options: Object.keys(options).length > 0 ? options : undefined,
-    };
-
-    if (editingItem) {
-      setMenuItems(menuItems.map((item) => (item.id === editingItem.id ? newItem : item)));
-    } else {
-      setMenuItems([...menuItems, newItem]);
-    }
-
-    // Update category item count
-    setCategories(
-      categories.map((cat) => ({
-        ...cat,
-        itemCount: menuItems.filter((item) => item.category === cat.id).length,
-      }))
-    );
-
-    setShowItemDialog(false);
-    resetItemForm();
-  };
-
-  const handleSaveCategory = () => {
-    if (!categoryForm.name || !categoryForm.icon) {
-      alert('Nama kategori dan ikon harus diisi!');
+  const handleSaveItem = async () => {
+    if (!itemForm.name || !itemForm.price || !itemForm.category) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
       return;
     }
 
-    const newCategory: Category = {
-      id: editingCategory?.id || categoryForm.name.toLowerCase().replace(/\s+/g, '-'),
-      name: categoryForm.name,
-      description: categoryForm.description,
-      itemCount: editingCategory?.itemCount || 0,
-      icon: categoryForm.icon,
-    };
+    try {
+      let finalPrice = Number.parseInt(itemForm.price);
+      let originalPrice = undefined;
 
-    if (editingCategory) {
-      setCategories(categories.map((cat) => (cat.id === editingCategory.id ? newCategory : cat)));
-    } else {
-      setCategories([...categories, newCategory]);
+      // Handle discount calculation
+      if (itemForm.isPromo && itemForm.discountPercentage) {
+        originalPrice = Number.parseInt(itemForm.price);
+        const discount = Number.parseFloat(itemForm.discountPercentage);
+        finalPrice = Math.round(originalPrice - (originalPrice * discount) / 100);
+      }
+
+      // Convert options to the format expected by MenuItem
+      const options: MenuItem['options'] = {};
+      itemForm.options.forEach((option) => {
+        if (option.name && option.values.filter((v) => v.name.trim()).length > 0) {
+          const optionKey = option.name.toLowerCase().replace(/\s+/g, '');
+          options[optionKey] = {
+            type: option.type,
+            required: option.required,
+            values: option.values.filter((v) => v.name.trim()),
+          };
+        }
+      });
+
+      const itemData = {
+        name: itemForm.name,
+        description: itemForm.description,
+        price: finalPrice,
+        originalPrice: originalPrice,
+        category: itemForm.category,
+        image: itemForm.image || '/placeholder.svg?height=200&width=200',
+        isPromo: itemForm.isPromo,
+      };
+
+      if (editingItem) {
+        await updateItem(editingItem.id, itemData, Object.keys(options).length > 0 ? options : undefined);
+        toast({
+          title: "Success",
+          description: "Item updated successfully",
+        });
+      } else {
+        await createItem(itemData, Object.keys(options).length > 0 ? options : undefined);
+        toast({
+          title: "Success",
+          description: "Item created successfully",
+        });
+      }
+
+      setShowItemDialog(false);
+      resetItemForm();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save item",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveCategory = async () => {
+    if (!categoryForm.name || !categoryForm.icon) {
+      toast({
+        title: "Error",
+        description: "Category name and icon are required",
+        variant: "destructive",
+      });
+      return;
     }
 
-    setShowCategoryDialog(false);
-    resetCategoryForm();
+    try {
+      const categoryData = {
+        name: categoryForm.name,
+        description: categoryForm.description,
+        icon: categoryForm.icon,
+      };
+
+      if (editingCategory) {
+        await updateCategory(editingCategory.id, categoryData);
+        toast({
+          title: "Success",
+          description: "Category updated successfully",
+        });
+      } else {
+        await createCategory(categoryData);
+        toast({
+          title: "Success",
+          description: "Category created successfully",
+        });
+      }
+
+      setShowCategoryDialog(false);
+      resetCategoryForm();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save category",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditItem = (item: MenuItem) => {
@@ -295,22 +325,70 @@ export function ItemsPage({ menuItems, setMenuItems, categories, setCategories }
     setShowCategoryDialog(true);
   };
 
-  const handleDeleteItem = (itemId: string) => {
-    setMenuItems(menuItems.filter((item) => item.id !== itemId));
-    // Update category item counts
-    setCategories(
-      categories.map((cat) => ({
-        ...cat,
-        itemCount: menuItems.filter((item) => item.category === cat.id && item.id !== itemId).length,
-      }))
-    );
+  const handleDeleteItem = async (itemId: string) => {
+    try {
+      await deleteItem(itemId);
+      toast({
+        title: "Success",
+        description: "Item deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete item",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteCategory = (categoryId: string) => {
-    setCategories(categories.filter((cat) => cat.id !== categoryId));
-    // Remove items in this category
-    setMenuItems(menuItems.filter((item) => item.category !== categoryId));
+  const handleDeleteCategory = async (categoryId: string) => {
+    try {
+      await deleteCategory(categoryId);
+      toast({
+        title: "Success",
+        description: "Category deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete category",
+        variant: "destructive",
+      });
+    }
   };
+
+  // Show loading state
+  if (itemsLoading || categoriesLoading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span>Loading...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (itemsError || categoriesError) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Data</h3>
+            <p className="text-gray-600 mb-4">
+              {itemsError || categoriesError}
+            </p>
+            <Button onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -383,8 +461,10 @@ export function ItemsPage({ menuItems, setMenuItems, categories, setCategories }
                       {item.originalPrice && <span className="text-sm text-gray-400 line-through">Rp {item.originalPrice.toLocaleString()}</span>}
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="outline">{item.category}</Badge>
-                      {item.options && Object.keys(item.options).length > 0 && <Badge className="text-xs bg-orange-500 text-white">{Object.keys(item.options).length} Options</Badge>}
+                      <Badge variant="outline">{categories.find((cat) => cat.id === item.category)?.name || 'Unknown'}</Badge>
+                      {item.options && Object.keys(item.options).length > 0 && (
+                        <Badge className="text-xs bg-orange-500 text-white">{Object.keys(item.options).length} Options</Badge>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -645,4 +725,11 @@ export function ItemsPage({ menuItems, setMenuItems, categories, setCategories }
       </Dialog>
     </div>
   );
+}
+
+// Add testing utilities to window object for browser console access
+if (typeof window !== 'undefined') {
+  import('@/examples/api-requests').then(({ runTestsInBrowser }) => {
+    runTestsInBrowser();
+  });
 }

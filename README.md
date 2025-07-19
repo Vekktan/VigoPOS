@@ -1,210 +1,219 @@
-# Smart PoS System - Multi-App Architecture
+# CoffeePOS - Point of Sale System
 
-Modern Point of Sale system built with React, TypeScript, and Next.js using a monorepo architecture with development API server.
+A modern POS system built with React, Next.js, and Supabase for coffee shops and cafes.
 
-## 🏗️ Architecture Overview
+## Features
 
-\`\`\`
-smart-pos-system/
-├── apps/
-│   ├── api-server/       # Development API server with mock data
-│   ├── customer-app/     # PWA for customers (mobile-first)
-│   ├── cashier-app/      # Desktop app for cashiers
-│   └── kitchen-app/      # Touch-friendly app for kitchen
-├── packages/
-│   └── socket-client/    # WebSocket client library
-├── shared/
-│   ├── components/       # Reusable UI components
-│   ├── hooks/           # Shared React hooks
-│   ├── types/           # TypeScript type definitions
-│   ├── utils/           # Utility functions
-│   └── services/        # API client base
-└── package.json         # Workspace configuration
-\`\`\`
+- **Menu Management**: Add, edit, and delete menu items with custom options
+- **Category Management**: Organize items into categories with icons
+- **Item Options**: Configure size, flavor, and add-on options with pricing
+- **Promotional Items**: Mark items as promotional with discount pricing
+- **Real-time Updates**: Live updates using Supabase real-time features
 
-## 🚀 Getting Started
+## Database Structure
 
-### Prerequisites
-- Node.js 18+
-- npm or yarn
+### Tables
 
-### Installation
-\`\`\`bash
-# Install dependencies for all apps
-npm run install:all
-\`\`\`
+1. **categories**
+   - `id` (UUID, Primary Key)
+   - `name` (VARCHAR, Unique)
+   - `description` (TEXT)
+   - `icon` (VARCHAR)
+   - `created_at` (TIMESTAMP)
+   - `updated_at` (TIMESTAMP)
 
-### Development
-\`\`\`bash
-# Run all apps simultaneously (recommended)
-npm run dev:all
+2. **items**
+   - `id` (UUID, Primary Key)
+   - `name` (VARCHAR)
+   - `description` (TEXT)
+   - `price` (DECIMAL)
+   - `original_price` (DECIMAL, for promotional items)
+   - `category_id` (UUID, Foreign Key to categories)
+   - `image_url` (TEXT)
+   - `is_promo` (BOOLEAN)
+   - `created_at` (TIMESTAMP)
+   - `updated_at` (TIMESTAMP)
 
-# Or run individual apps
-npm run dev:api      # API Server - Port 3000
-npm run dev:customer # Customer App - Port 3001
-npm run dev:cashier  # Cashier App - Port 3002  
-npm run dev:kitchen  # Kitchen App - Port 3003
-\`\`\`
+3. **item_options**
+   - `id` (UUID, Primary Key)
+   - `item_id` (UUID, Foreign Key to items)
+   - `name` (VARCHAR)
+   - `type` (VARCHAR, 'single' or 'multiple')
+   - `required` (BOOLEAN)
+   - `created_at` (TIMESTAMP)
+   - `updated_at` (TIMESTAMP)
 
-## 🌐 API Server (Development)
+4. **item_option_values**
+   - `id` (UUID, Primary Key)
+   - `item_option_id` (UUID, Foreign Key to item_options)
+   - `name` (VARCHAR)
+   - `price` (DECIMAL)
+   - `created_at` (TIMESTAMP)
+   - `updated_at` (TIMESTAMP)
 
-The development API server provides:
+## Setup Instructions
 
-### **Endpoints:**
-- \`GET /api/menu\` - Get menu items
-- \`POST /api/orders\` - Create new order
-- \`GET /api/orders\` - Get all orders
-- \`PUT /api/orders/:id/status\` - Update order status
-- \`GET /api/orders/kitchen/queue\` - Get kitchen orders
-- \`POST /api/payments/process\` - Process payment
-- \`GET /api/tables\` - Get table information
+### 1. Supabase Setup
 
-### **Real-time Features:**
-- WebSocket connection on port 3000
-- Real-time order updates
-- Kitchen order notifications
-- Payment status updates
+1. Create a new Supabase project at [supabase.com](https://supabase.com)
+2. Go to your project dashboard
+3. Navigate to SQL Editor
+4. Run the SQL schema from `database/schema.sql`
+5. Copy your project URL and anon key from Settings > API
 
-### **Mock Data:**
-- 10+ realistic menu items
-- 20 tables with QR codes
-- Sample orders with different statuses
-- Simulated payment processing
+### 2. Environment Variables
 
-## 📱 Applications
+Create a `.env.local` file in the root directory:
 
-### Customer App (PWA) - Port 3001
-- **Features**: Menu browsing, cart management, order placement
-- **API Integration**: Menu fetching, order creation
-- **Real-time**: Order status updates via WebSocket
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-### Cashier App (Desktop) - Port 3002
-- **Features**: Order management, payment processing, analytics
-- **API Integration**: Order CRUD, payment processing, dashboard analytics
-- **Real-time**: Live order updates, kitchen communication
+### 3. Install Dependencies
 
-### Kitchen App (Touch-friendly) - Port 3003
-- **Features**: Order queue, cooking timers, status management
-- **API Integration**: Kitchen order queue, status updates
-- **Real-time**: New order notifications, status synchronization
+```bash
+npm install @supabase/supabase-js
+```
 
-## 🔄 Data Flow with API
+### 4. Run the Application
 
-1. **Customer** → \`POST /api/orders\` → Creates order
-2. **Cashier** → \`PUT /api/orders/:id/status\` → Confirms & sends to kitchen
-3. **Kitchen** → \`PUT /api/orders/:id/status\` → Updates cooking status
-4. **WebSocket** → Broadcasts updates to all connected clients
+```bash
+npm run dev
+```
 
-## 🛠️ API Features
+## API Functions
 
-### **Order Management:**
-\`\`\`javascript
-// Create order
-POST /api/orders
-{
-  "items": [{"id": "item1", "quantity": 2}],
-  "tableNumber": 5,
-  "customerName": "John Doe",
-  "notes": "Extra spicy"
+### Items API
+
+- `itemApi.getAll()` - Fetch all items with options
+- `itemApi.create(item, options)` - Create new item with options
+- `itemApi.update(id, updates, options)` - Update item and options
+- `itemApi.delete(id)` - Delete item
+- `itemApi.getById(id)` - Get item by ID
+
+### Categories API
+
+- `categoryApi.getAll()` - Fetch all categories
+- `categoryApi.create(category)` - Create new category
+- `categoryApi.update(id, updates)` - Update category
+- `categoryApi.delete(id)` - Delete category
+- `categoryApi.getWithItemCount()` - Fetch categories with item count
+
+## Custom Hooks
+
+### useItems()
+Manages item state and API calls:
+```typescript
+const { items, loading, error, createItem, updateItem, deleteItem } = useItems();
+```
+
+### useCategories()
+Manages category state and API calls:
+```typescript
+const { categories, loading, error, createCategory, updateCategory, deleteCategory } = useCategories();
+```
+
+## Item Options Structure
+
+Items can have multiple options (e.g., Size, Sugar Level, Extras):
+
+```typescript
+options: {
+  size: {
+    type: 'single',
+    required: true,
+    values: [
+      { name: 'Small', price: 0 },
+      { name: 'Regular', price: 0 },
+      { name: 'Large', price: 5000 }
+    ]
+  },
+  sugar: {
+    type: 'single',
+    required: true,
+    values: [
+      { name: 'No Sugar', price: 0 },
+      { name: 'Less Sugar', price: 0 },
+      { name: 'Normal Sugar', price: 0 },
+      { name: 'Extra Sugar', price: 0 }
+    ]
+  },
+  extras: {
+    type: 'multiple',
+    required: false,
+    values: [
+      { name: 'Extra Shot', price: 8000 },
+      { name: 'Oat Milk', price: 5000 },
+      { name: 'Almond Milk', price: 5000 }
+    ]
+  }
 }
+```
 
-// Update status
-PUT /api/orders/ORD-123/status
-{
-  "status": "preparing"
-}
-\`\`\`
+## Features
 
-### **Real-time Events:**
-\`\`\`javascript
-// Socket events
-socket.on('order:created', (order) => { ... })
-socket.on('order:status-changed', (data) => { ... })
-socket.on('kitchen:new-order', (order) => { ... })
-socket.on('payment:completed', (payment) => { ... })
-\`\`\`
+### Menu Management
+- Add new menu items with detailed information
+- Configure item options with pricing
+- Set promotional pricing with original price
+- Organize items by categories
+- Upload item images
 
-### **Analytics:**
-\`\`\`javascript
-GET /api/orders/analytics/dashboard
-// Returns: sales, order counts, popular items, etc.
-\`\`\`
+### Category Management
+- Create and manage item categories
+- Assign icons to categories
+- View item count per category
+- Edit and delete categories
 
-## 🔧 Configuration
+### Item Options
+- Single choice options (e.g., Size, Sugar Level)
+- Multiple choice options (e.g., Extras, Toppings)
+- Required vs optional options
+- Custom pricing for each option value
 
-### Environment Variables
-\`\`\`bash
-# API Configuration
-NEXT_PUBLIC_API_URL=http://localhost:3000/api
-NEXT_PUBLIC_SOCKET_URL=http://localhost:3000
+### Promotional Items
+- Mark items as promotional
+- Set discount percentage
+- Display original and discounted prices
+- Filter promotional items
 
-# Development
-NODE_ENV=development
-PORT=3000
-\`\`\`
+## Technologies Used
 
-## 📊 Mock Data Structure
+- **Frontend**: React, Next.js, TypeScript
+- **UI Components**: Shadcn/ui, Tailwind CSS
+- **Backend**: Supabase (PostgreSQL, Real-time, Auth)
+- **State Management**: React Hooks
+- **API**: Supabase JavaScript Client
 
-### **Menu Items:**
-- Fast Track: Es Teh, Es Jeruk, Kerupuk
-- Main Course: Nasi Goreng, Ayam Bakar, Mie Ayam
-- Desserts: Es Krim, Pudding, Es Campur
+## Project Structure
 
-### **Sample Orders:**
-- Different statuses (pending, confirmed, preparing, ready)
-- Various payment methods (cash, QRIS, card)
-- Realistic timestamps and amounts
+```
+├── app/
+│   └── cashier/
+│       └── page.tsx              # Main cashier page
+├── components/
+│   └── cashier/
+│       └── ItemsPage.tsx         # Menu management component
+├── hooks/
+│   ├── useItems.ts               # Items state management
+│   └── useCategories.ts          # Categories state management
+├── services/
+│   └── api.ts                    # Supabase API functions
+├── lib/
+│   └── supabase.ts               # Supabase client configuration
+└── database/
+    └── schema.sql                # Database schema
+```
 
-### **Tables:**
-- 20 tables with different capacities
-- QR codes for customer scanning
-- Dynamic availability status
+## Contributing
 
-## 🚀 Production Deployment
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-### Build all apps
-\`\`\`bash
-npm run build:all
-\`\`\`
+## License
 
-### Replace API Server
-For production, replace the mock API server with:
-- Real database (PostgreSQL, MongoDB)
-- Authentication system
-- Payment gateway integration
-- Production WebSocket server
-
-## 🔒 Security Features
-
-- CORS configuration for all origins
-- Request validation
-- Error handling middleware
-- Helmet.js security headers
-
-## 📈 Performance Features
-
-- In-memory data storage for fast responses
-- WebSocket connection pooling
-- Optimistic UI updates
-- Efficient data structures
-
-## 🧪 Testing the API
-
-### Health Check
-\`\`\`bash
-curl http://localhost:3000/api/health
-\`\`\`
-
-### Create Order
-\`\`\`bash
-curl -X POST http://localhost:3000/api/orders \\
-  -H "Content-Type: application/json" \\
-  -d '{"items":[{"id":"item1","quantity":1}],"tableNumber":5}'
-\`\`\`
-
-### Get Menu
-\`\`\`bash
-curl http://localhost:3000/api/menu
-\`\`\`
-
-This development API provides a complete backend simulation for testing and development of the Smart PoS system! 🎉
+MIT License - see LICENSE file for details.
