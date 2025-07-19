@@ -7,17 +7,20 @@ import { Star, Percent, Plus } from 'lucide-react';
 import { ProductDetailModal } from './ProductDetailModal';
 import { CartSidebar } from './CartSidebar';
 import type { MenuItem, CartItem, Order } from '@/app/cashier/page';
+import { useItems } from '@/hooks/useItems';
 
 interface PromoPageProps {
-  menuItems: MenuItem[];
   cart: CartItem[];
   setCart: (cart: CartItem[] | ((prev: CartItem[]) => CartItem[])) => void;
   onOrderComplete: (order: Order) => void;
 }
 
-export function PromoPage({ menuItems, cart, setCart, onOrderComplete }: PromoPageProps) {
+export function PromoPage({ cart, setCart, onOrderComplete }: PromoPageProps) {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [showCart, setShowCart] = useState(false);
+
+  const { items: menuItems, loading, error } = useItems();
+  const promoItems = menuItems.filter((item) => item.isPromo);
 
   const addToCart = (item: MenuItem, options?: { [key: string]: string[] }) => {
     try {
@@ -104,7 +107,7 @@ export function PromoPage({ menuItems, cart, setCart, onOrderComplete }: PromoPa
           </div>
         </div>
 
-        {menuItems.length === 0 ? (
+        {promoItems.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Star className="w-12 h-12 text-gray-400" />
@@ -114,7 +117,7 @@ export function PromoPage({ menuItems, cart, setCart, onOrderComplete }: PromoPa
           </div>
         ) : (
           <div className={`grid gap-6 ${showCart ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
-            {menuItems.map((item) => (
+            {promoItems.map((item) => (
               <Card key={item.id} className="group cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-white border-0 shadow-md overflow-hidden">
                 <CardContent className="p-0">
                   <div className="relative" onClick={() => setSelectedItem(item)}>

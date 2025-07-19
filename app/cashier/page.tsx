@@ -368,7 +368,10 @@ export default function CashierPage() {
           />
         );
       case 'promo':
-        return <PromoPage menuItems={menuItems.filter((item) => item.isPromo)} cart={cart} setCart={setCart} />;
+        return <PromoPage cart={cart} setCart={setCart} onOrderComplete={(order) => {
+          setOrders((prev) => [order, ...prev]);
+          setCart([]);
+        }} />;
       case 'notification':
         return <NotificationPage notifications={notifications} onNotificationAction={() => {}} />;
       case 'history':
