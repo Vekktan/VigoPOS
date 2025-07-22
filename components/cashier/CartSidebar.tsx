@@ -55,8 +55,7 @@ export function CartSidebar({ cart, setCart, onOrderComplete, onClose }: CartSid
   };
 
   const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  const tax = subtotal * 0.1;
-  const total = subtotal + tax;
+  const total = subtotal;
 
   const validateForm = () => {
     if (!customerName.trim()) {
@@ -124,7 +123,6 @@ ${cart
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💵 Subtotal: Rp ${subtotal.toLocaleString('id-ID')}
-🏷️ Pajak (10%): Rp ${tax.toLocaleString('id-ID')}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💳 *TOTAL: Rp ${total.toLocaleString('id-ID')}*
 💰 Pembayaran: ${selectedPayment.toUpperCase()}
@@ -324,10 +322,6 @@ ${getMotivationalQuote(customerPhone)}
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>Rp {subtotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Pajak (10%)</span>
-                <span>Rp {tax.toLocaleString()}</span>
               </div>
               <div className="flex justify-between font-bold text-sm border-t border-gray-200 pt-1">
                 <span>Total</span>
