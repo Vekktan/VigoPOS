@@ -128,6 +128,91 @@ export interface Database {
           updated_at?: string;
         };
       };
+      orders: {
+        Row: {
+          id: string;
+          table_number: string | null;
+          customer_name: string | null;
+          customer_phone: string;
+          order_type: 'dine-in' | 'takeaway';
+          payment_method: 'qris' | 'debit' | 'cash';
+          total_amount: number;
+          status: 'pending' | 'accepted' | 'rejected' | 'sent-to-kitchen' | 'preparing' | 'ready' | 'delivered';
+          source: 'cashier' | 'qris';
+          items: any;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          table_number?: string | null;
+          customer_name?: string | null;
+          customer_phone: string;
+          order_type: 'dine-in' | 'takeaway';
+          payment_method: 'qris' | 'debit' | 'cash';
+          total_amount: number;
+          status?: 'pending' | 'accepted' | 'rejected' | 'sent-to-kitchen' | 'preparing' | 'ready' | 'delivered';
+          source?: 'cashier' | 'qris';
+          items: any;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          table_number?: string | null;
+          customer_name?: string | null;
+          customer_phone?: string;
+          order_type?: 'dine-in' | 'takeaway';
+          payment_method?: 'qris' | 'debit' | 'cash';
+          total_amount?: number;
+          status?: 'pending' | 'accepted' | 'rejected' | 'sent-to-kitchen' | 'preparing' | 'ready' | 'delivered';
+          source?: 'cashier' | 'qris';
+          items?: any;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      qris_notifications: {
+        Row: {
+          id: string;
+          order_id: string;
+          table_number: string;
+          customer_phone: string;
+          order_type: 'dine-in' | 'takeaway';
+          items: any;
+          total_amount: number;
+          status: 'pending' | 'accepted' | 'rejected' | 'sent-to-kitchen';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          table_number: string;
+          customer_phone: string;
+          order_type: 'dine-in' | 'takeaway';
+          items: any;
+          total_amount: number;
+          status?: 'pending' | 'accepted' | 'rejected' | 'sent-to-kitchen';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_id?: string;
+          table_number?: string;
+          customer_phone?: string;
+          order_type?: 'dine-in' | 'takeaway';
+          items?: any;
+          total_amount?: number;
+          status?: 'pending' | 'accepted' | 'rejected' | 'sent-to-kitchen';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 } 

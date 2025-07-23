@@ -16,6 +16,18 @@ class OrderApi extends ApiClient {
     return response.data
   }
 
+  async createQRISOrder(data: {
+    tableNumber: string
+    customerPhone: string
+    orderType: 'dine-in' | 'takeaway'
+    items: CartItem[]
+    totalAmount: number
+    notes?: string
+  }): Promise<{ orderId: string; notificationId: string; message: string }> {
+    const response = await this.post<{ success: boolean; data: { orderId: string; notificationId: string; message: string } }>("/qris-orders", data)
+    return response.data
+  }
+
   async getOrder(orderId: string): Promise<Order> {
     const response = await this.get<{ success: boolean; data: Order }>(`/orders/${orderId}`)
     return response.data

@@ -48,11 +48,47 @@ CREATE TABLE IF NOT EXISTS item_option_values (
   UNIQUE(item_option_id, name)
 );
 
+-- Create orders table
+CREATE TABLE IF NOT EXISTS orders (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  table_number VARCHAR(10),
+  customer_name VARCHAR(255),
+  customer_phone VARCHAR(20) NOT NULL,
+  order_type VARCHAR(20) NOT NULL CHECK (order_type IN ('dine-in', 'takeaway')),
+  payment_method VARCHAR(20) NOT NULL CHECK (payment_method IN ('qris', 'debit', 'cash')),
+  total_amount DECIMAL(10,2) NOT NULL CHECK (total_amount >= 0),
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected', 'sent-to-kitchen', 'preparing', 'ready', 'delivered')),
+  source VARCHAR(20) NOT NULL DEFAULT 'qris' CHECK (source IN ('cashier', 'qris')),
+  items JSONB NOT NULL,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create qris_notifications table
+CREATE TABLE IF NOT EXISTS qris_notifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  table_number VARCHAR(10) NOT NULL,
+  customer_phone VARCHAR(20) NOT NULL,
+  order_type VARCHAR(20) NOT NULL CHECK (order_type IN ('dine-in', 'takeaway')),
+  items JSONB NOT NULL,
+  total_amount DECIMAL(10,2) NOT NULL CHECK (total_amount >= 0),
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected', 'sent-to-kitchen')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_items_category_id ON items(category_id);
 CREATE INDEX IF NOT EXISTS idx_items_is_promo ON items(is_promo);
 CREATE INDEX IF NOT EXISTS idx_item_options_item_id ON item_options(item_id);
 CREATE INDEX IF NOT EXISTS idx_item_option_values_option_id ON item_option_values(item_option_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_source ON orders(source);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
+CREATE INDEX IF NOT EXISTS idx_qris_notifications_status ON qris_notifications(status);
+CREATE INDEX IF NOT EXISTS idx_qris_notifications_created_at ON qris_notifications(created_at);
 
 -- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -74,6 +110,12 @@ CREATE TRIGGER update_item_options_updated_at BEFORE UPDATE ON item_options
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_item_option_values_updated_at BEFORE UPDATE ON item_option_values
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_qris_notifications_updated_at BEFORE UPDATE ON qris_notifications
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Insert sample data

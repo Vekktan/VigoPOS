@@ -10,6 +10,7 @@ import { SettingsPage } from '@/components/cashier/SettingsPage';
 import { NotificationPage } from '@/components/cashier/NotificationPage';
 import { SalesReportPage } from '@/components/cashier/SalesReportPage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useQRISNotifications } from '@/hooks/useQRISNotifications';
 
 export type NavigationPage = 'menu' | 'promo' | 'notification' | 'history' | 'items' | 'sales-report' | 'settings';
 
@@ -138,52 +139,9 @@ const generateDummyOrders = (): Order[] => {
 export default function CashierPage() {
   const [currentPage, setCurrentPage] = useState<NavigationPage>('menu');
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [notifications, setNotifications] = useState<QRISNotification[]>([
-    {
-      id: 'qris-001',
-      tableNumber: '5',
-      items: [
-        {
-          id: '1',
-          name: 'Cappuccino',
-          description: 'Espresso with steamed milk foam',
-          price: 35000,
-          category: 'coffee',
-          image: '/placeholder.svg?height=200&width=200',
-          isPromo: false,
-          quantity: 2,
-          orderType: 'dine-in',
-          totalPrice: 70000,
-        },
-      ],
-      orderType: 'dine-in',
-      customerPhone: '+62 817-449-496',
-      total: 70000,
-      timestamp: new Date(Date.now() - 5 * 60 * 1000),
-    },
-    {
-      id: 'qris-002',
-      tableNumber: '12',
-      items: [
-        {
-          id: '2',
-          name: 'Latte',
-          description: 'Smooth espresso with steamed milk',
-          price: 38000,
-          category: 'coffee',
-          image: '/placeholder.svg?height=200&width=200',
-          isPromo: false,
-          quantity: 1,
-          orderType: 'takeaway',
-          totalPrice: 38000,
-        },
-      ],
-      orderType: 'takeaway',
-      customerPhone: '+62 877-8277-0107',
-      total: 38000,
-      timestamp: new Date(Date.now() - 2 * 60 * 1000),
-    },
-  ]);
+  
+  // Use QRIS notifications hook instead of dummy data
+  const { notifications, loading: notificationsLoading, error: notificationsError, updateNotificationStatus } = useQRISNotifications();
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([
     {
@@ -354,6 +312,101 @@ export default function CashierPage() {
 
   const [orders, setOrders] = useState<Order[]>(generateDummyOrders());
 
+  const handleNotificationAction = async (notificationId: string, action: 'accept' | 'reject' | 'send-to-kitchen') => {
+    const success = await updateNotificationStatus(notificationId, action);
+    
+    if (success) {
+      const notification = notifications.find((n) => n.id === notificationId);
+      if (!notification) return;
+
+      if (action === 'accept' || action === 'reject' || action === 'send-to-kitchen') {
+        // Create order from notification
+        const order: Order = {
+          id: `ORD-${Date.now()}`,
+          items: notification.items,
+          customerName: `Table ${notification.tableNumber}`,
+          customerPhone: notification.customerPhone,
+          orderType: notification.orderType,
+          tableNumber: notification.tableNumber,
+          paymentMethod: 'qris',
+          total: notification.total,
+          status: action === 'accept' ? 'accepted' : action === 'reject' ? 'rejected' : 'sent-to-kitchen',
+          timestamp: new Date(),
+          source: 'qris',
+        };
+
+        setOrders((prev) => [order, ...prev]);
+
+        // WhatsApp Integration
+        const phoneNumber = notification.customerPhone.replace(/[^0-9]/g, '');
+        const lastDigit = Number.parseInt(phoneNumber.slice(-1));
+
+        const motivationalQuotes = [
+          'Hidup ini seperti kopi, pahit di awal tapi nikmat di akhir! ☕',
+          'Semangat seperti espresso, kecil tapi bertenaga! 💪',
+          'Hari yang indah dimulai dengan kopi yang sempurna! 🌅',
+          'Kopi terbaik adalah yang dinikmati bersama orang terkasih! ❤️',
+          'Setiap tegukan kopi adalah momen kebahagiaan kecil! 😊',
+          'Kopi mengajarkan kita untuk menikmati proses, bukan hanya hasil! 🎯',
+          'Seperti kopi yang diseduh dengan sabar, kesuksesan butuh waktu! ⏰',
+          'Kopi hangat, hati tenang, pikiran jernih! 🧘',
+          'Dalam secangkir kopi, ada cerita dan kenangan indah! 📖',
+          'Kopi adalah pelukan hangat dalam bentuk minuman! 🤗',
+        ];
+
+        const quote = motivationalQuotes[lastDigit];
+
+        if (action === 'accept') {
+          const receiptText = `
+🎉 *PESANAN DITERIMA* 🎉
+
+📋 *Detail Pesanan:*
+ID: ${order.id}
+Meja: ${notification.tableNumber}
+Tipe: ${notification.orderType === 'dine-in' ? 'Dine In' : 'Takeaway'}
+
+📝 *Item Pesanan:*
+${notification.items.map((item) => `• ${item.name} x${item.quantity} - Rp ${(item.price * item.quantity).toLocaleString()}`).join('\n')}
+
+💰 *Total: Rp ${notification.total.toLocaleString()}*
+
+⏰ *Estimasi: 15-20 menit*
+📍 *Status: Sedang diproses*
+
+${quote}
+
+Terima kasih telah mempercayai CoffeePOS! 🙏
+          `.trim();
+
+          const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(receiptText)}`;
+          window.open(whatsappUrl, '_blank');
+        } else if (action === 'reject') {
+          const rejectionText = `
+😔 *PESANAN DITOLAK*
+
+📋 *Detail Pesanan:*
+ID: ${order.id}
+Meja: ${notification.tableNumber}
+
+❌ *Alasan:* Mohon maaf, beberapa item tidak tersedia saat ini
+
+💡 *Solusi:*
+• Silakan pesan ulang dengan menu yang tersedia
+• Hubungi kasir untuk rekomendasi menu serupa
+• Cek menu promo hari ini
+
+${quote}
+
+Mohon maaf atas ketidaknyamanannya 🙏
+          `.trim();
+
+          const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(rejectionText)}`;
+          window.open(whatsappUrl, '_blank');
+        }
+      }
+    }
+  };
+
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'menu':
@@ -373,13 +426,18 @@ export default function CashierPage() {
           setCart([]);
         }} />;
       case 'notification':
-        return <NotificationPage notifications={notifications} onNotificationAction={() => {}} />;
+        return <NotificationPage 
+          notifications={notifications} 
+          onNotificationAction={handleNotificationAction}
+          loading={notificationsLoading}
+          error={notificationsError}
+        />;
       case 'history':
         return <HistoryPage />;
       case 'items':
         return <ItemsPage />;
       case 'sales-report':
-        return <SalesReportPage orders={orders} />;
+        return <SalesReportPage />;
       case 'settings':
         return <SettingsPage orders={orders} />;
       default:
@@ -393,97 +451,7 @@ export default function CashierPage() {
         currentPage={currentPage}
         onNavigate={setCurrentPage}
         notifications={currentPage === 'menu' ? notifications : []}
-        onNotificationAction={(notificationId, action) => {
-          const notification = notifications.find((n) => n.id === notificationId);
-          if (!notification) return;
-
-          if (action === 'accept' || action === 'reject' || action === 'send-to-kitchen') {
-            // Create order from notification
-            const order: Order = {
-              id: `ORD-${Date.now()}`,
-              items: notification.items,
-              customerName: `Table ${notification.tableNumber}`,
-              customerPhone: notification.customerPhone,
-              orderType: notification.orderType,
-              tableNumber: notification.tableNumber,
-              paymentMethod: 'qris',
-              total: notification.total,
-              status: action === 'accept' ? 'accepted' : action === 'reject' ? 'rejected' : 'sent-to-kitchen',
-              timestamp: new Date(),
-              source: 'qris',
-            };
-
-            setOrders((prev) => [order, ...prev]);
-            setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-
-            // WhatsApp Integration
-            const phoneNumber = notification.customerPhone.replace(/[^0-9]/g, '');
-            const lastDigit = Number.parseInt(phoneNumber.slice(-1));
-
-            const motivationalQuotes = [
-              'Hidup ini seperti kopi, pahit di awal tapi nikmat di akhir! ☕',
-              'Semangat seperti espresso, kecil tapi bertenaga! 💪',
-              'Hari yang indah dimulai dengan kopi yang sempurna! 🌅',
-              'Kopi terbaik adalah yang dinikmati bersama orang terkasih! ❤️',
-              'Setiap tegukan kopi adalah momen kebahagiaan kecil! 😊',
-              'Kopi mengajarkan kita untuk menikmati proses, bukan hanya hasil! 🎯',
-              'Seperti kopi yang diseduh dengan sabar, kesuksesan butuh waktu! ⏰',
-              'Kopi hangat, hati tenang, pikiran jernih! 🧘',
-              'Dalam secangkir kopi, ada cerita dan kenangan indah! 📖',
-              'Kopi adalah pelukan hangat dalam bentuk minuman! 🤗',
-            ];
-
-            const quote = motivationalQuotes[lastDigit];
-
-            if (action === 'accept') {
-              const receiptText = `
-🎉 *PESANAN DITERIMA* 🎉
-
-📋 *Detail Pesanan:*
-ID: ${order.id}
-Meja: ${notification.tableNumber}
-Tipe: ${notification.orderType === 'dine-in' ? 'Dine In' : 'Takeaway'}
-
-📝 *Item Pesanan:*
-${notification.items.map((item) => `• ${item.name} x${item.quantity} - Rp ${(item.price * item.quantity).toLocaleString()}`).join('\n')}
-
-💰 *Total: Rp ${notification.total.toLocaleString()}*
-
-⏰ *Estimasi: 15-20 menit*
-📍 *Status: Sedang diproses*
-
-${quote}
-
-Terima kasih telah mempercayai CoffeePOS! 🙏
-              `.trim();
-
-              const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(receiptText)}`;
-              window.open(whatsappUrl, '_blank');
-            } else if (action === 'reject') {
-              const rejectionText = `
-😔 *PESANAN DITOLAK*
-
-📋 *Detail Pesanan:*
-ID: ${order.id}
-Meja: ${notification.tableNumber}
-
-❌ *Alasan:* Mohon maaf, beberapa item tidak tersedia saat ini
-
-💡 *Solusi:*
-• Silakan pesan ulang dengan menu yang tersedia
-• Hubungi kasir untuk rekomendasi menu serupa
-• Cek menu promo hari ini
-
-${quote}
-
-Mohon maaf atas ketidaknyamanannya 🙏
-              `.trim();
-
-              const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(rejectionText)}`;
-              window.open(whatsappUrl, '_blank');
-            }
-          }
-        }}
+        onNotificationAction={handleNotificationAction}
       >
         {renderCurrentPage()}
       </CashierLayout>

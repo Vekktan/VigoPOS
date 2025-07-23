@@ -5,37 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ShoppingCart, Plus, Minus, ArrowLeft, Trash2, Download, ChevronDown, X } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Minus, ArrowLeft, Trash2, Download, ChevronDown, X, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-
-interface ProductOption {
-  id: string;
-  name: string;
-  type: 'single' | 'multiple';
-  required: boolean;
-  options: {
-    id: string;
-    name: string;
-    price: number;
-    available: boolean;
-  }[];
-}
-
-interface MenuItem {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  category: 'Coffee' | 'Milk Based' | 'Makanan' | 'Dessert';
-  image: string;
-  description: string;
-  options: ProductOption[];
-}
+import { useMenuItems, type MenuItem, type ProductOption } from '@/hooks/useMenuItems';
 
 interface CartItem extends MenuItem {
   quantity: number;
@@ -44,217 +21,9 @@ interface CartItem extends MenuItem {
   totalPrice: number;
 }
 
-const menuItems: MenuItem[] = [
-  {
-    id: '1',
-    name: 'Americano',
-    price: 18000,
-    category: 'Coffee',
-    image: '/placeholder.svg?height=300&width=300',
-    description: 'Rich and bold espresso with hot water, perfect for coffee purists who enjoy the pure taste of coffee beans.',
-    options: [
-      {
-        id: 'size',
-        name: 'Pilihan Size',
-        type: 'single',
-        required: true,
-        options: [
-          { id: 'small', name: 'Small', price: 0, available: true },
-          { id: 'medium', name: 'Medium', price: 3000, available: true },
-          { id: 'large', name: 'Large', price: 5000, available: true },
-        ],
-      },
-      {
-        id: 'sugar',
-        name: 'Tingkat Gula',
-        type: 'single',
-        required: false,
-        options: [
-          { id: 'normal', name: 'Normal', price: 0, available: true },
-          { id: 'sedikit', name: 'Sedikit', price: 0, available: true },
-          { id: 'tanpa', name: 'Tanpa Gula', price: 0, available: true },
-        ],
-      },
-      {
-        id: 'extra',
-        name: 'Extra Shot (Opsional)',
-        type: 'single',
-        required: false,
-        options: [
-          { id: 'no', name: 'No', price: 0, available: true },
-          { id: 'yes', name: 'Yes', price: 5000, available: true },
-        ],
-      },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Cappuccino',
-    price: 20000,
-    category: 'Coffee',
-    image: '/placeholder.svg?height=300&width=300',
-    description: 'Perfect balance of espresso, steamed milk, and foam creating a creamy and rich coffee experience.',
-    options: [
-      {
-        id: 'size',
-        name: 'Pilihan Size',
-        type: 'single',
-        required: true,
-        options: [
-          { id: 'small', name: 'Small', price: 0, available: true },
-          { id: 'medium', name: 'Medium', price: 3000, available: true },
-          { id: 'large', name: 'Large', price: 5000, available: true },
-        ],
-      },
-      {
-        id: 'sugar',
-        name: 'Tingkat Gula',
-        type: 'single',
-        required: false,
-        options: [
-          { id: 'normal', name: 'Normal', price: 0, available: true },
-          { id: 'sedikit', name: 'Sedikit', price: 0, available: true },
-          { id: 'tanpa', name: 'Tanpa Gula', price: 0, available: true },
-        ],
-      },
-      {
-        id: 'extra',
-        name: 'Extra Shot (Opsional)',
-        type: 'single',
-        required: false,
-        options: [
-          { id: 'no', name: 'No', price: 0, available: true },
-          { id: 'yes', name: 'Yes', price: 5000, available: true },
-        ],
-      },
-    ],
-  },
-  {
-    id: '3',
-    name: 'Matcha Latte',
-    price: 22000,
-    category: 'Milk Based',
-    image: '/placeholder.svg?height=300&width=300',
-    description: 'Premium Japanese matcha powder blended with steamed milk for a smooth and earthy flavor profile.',
-    options: [
-      {
-        id: 'size',
-        name: 'Pilihan Size',
-        type: 'single',
-        required: true,
-        options: [
-          { id: 'small', name: 'Small', price: 0, available: true },
-          { id: 'medium', name: 'Medium', price: 3000, available: true },
-          { id: 'large', name: 'Large', price: 5000, available: true },
-        ],
-      },
-      {
-        id: 'sugar',
-        name: 'Tingkat Gula',
-        type: 'single',
-        required: false,
-        options: [
-          { id: 'normal', name: 'Normal', price: 0, available: true },
-          { id: 'sedikit', name: 'Sedikit', price: 0, available: true },
-          { id: 'tanpa', name: 'Tanpa Gula', price: 0, available: true },
-        ],
-      },
-      {
-        id: 'extra',
-        name: 'Extra Shot (Opsional)',
-        type: 'single',
-        required: false,
-        options: [
-          { id: 'no', name: 'No', price: 0, available: true },
-          { id: 'yes', name: 'Yes', price: 5000, available: true },
-        ],
-      },
-    ],
-  },
-  {
-    id: '4',
-    name: 'Caramel Macchiato',
-    price: 25000,
-    originalPrice: 30000,
-    category: 'Milk Based',
-    image: '/placeholder.svg?height=300&width=300',
-    description: 'Espresso with vanilla syrup and caramel drizzle, topped with steamed milk foam.',
-    options: [
-      {
-        id: 'size',
-        name: 'Pilihan Size',
-        type: 'single',
-        required: true,
-        options: [
-          { id: 'small', name: 'Small', price: 0, available: true },
-          { id: 'medium', name: 'Medium', price: 3000, available: true },
-          { id: 'large', name: 'Large', price: 5000, available: true },
-        ],
-      },
-      {
-        id: 'sugar',
-        name: 'Tingkat Gula',
-        type: 'single',
-        required: false,
-        options: [
-          { id: 'normal', name: 'Normal', price: 0, available: true },
-          { id: 'sedikit', name: 'Sedikit', price: 0, available: true },
-          { id: 'tanpa', name: 'Tanpa Gula', price: 0, available: true },
-        ],
-      },
-      {
-        id: 'extra',
-        name: 'Extra Shot (Opsional)',
-        type: 'single',
-        required: false,
-        options: [
-          { id: 'no', name: 'No', price: 0, available: true },
-          { id: 'yes', name: 'Yes', price: 5000, available: true },
-        ],
-      },
-    ],
-  },
-  {
-    id: '5',
-    name: 'Croissant',
-    price: 15000,
-    category: 'Makanan',
-    image: '/placeholder.svg?height=300&width=300',
-    description: 'Buttery and flaky French pastry, freshly baked daily with premium butter.',
-    options: [],
-  },
-  {
-    id: '6',
-    name: 'Sandwich Club',
-    price: 28000,
-    category: 'Makanan',
-    image: '/placeholder.svg?height=300&width=300',
-    description: 'Triple layer sandwich with grilled chicken, fresh vegetables, and special sauce.',
-    options: [],
-  },
-  {
-    id: '7',
-    name: 'Tiramisu',
-    price: 18000,
-    category: 'Dessert',
-    image: '/placeholder.svg?height=300&width=300',
-    description: 'Classic Italian dessert with coffee-soaked ladyfingers and mascarpone cream.',
-    options: [],
-  },
-  {
-    id: '8',
-    name: 'Cheesecake',
-    price: 20000,
-    category: 'Dessert',
-    image: '/placeholder.svg?height=300&width=300',
-    description: 'Creamy New York style cheesecake with graham cracker crust.',
-    options: [],
-  },
-];
-
-const categories = ['Coffee', 'Milk Based', 'Makanan', 'Dessert'];
-
 export default function CustomerApp() {
+  const { menuItems, categories, loading, error } = useMenuItems();
+  
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('Coffee');
   const [searchQuery, setSearchQuery] = useState('');
@@ -275,6 +44,13 @@ export default function CustomerApp() {
   const [tableNumber] = useState('TBL 25');
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [editingCartIndex, setEditingCartIndex] = useState<number | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'failed'>('pending');
+  const [orderId, setOrderId] = useState<string | null>(null);
+
+  // Set default category when categories are loaded
+  if (categories.length > 0 && selectedCategory === 'Coffee' && !categories.includes('Coffee')) {
+    setSelectedCategory(categories[0]);
+  }
 
   const openProductDetail = (item: MenuItem) => {
     setSelectedItem(item);
@@ -411,6 +187,7 @@ export default function CustomerApp() {
       image: cartItem.image,
       description: cartItem.description,
       options: cartItem.options,
+      isPromo: cartItem.isPromo,
     };
 
     setSelectedItem(menuItem);
@@ -430,10 +207,99 @@ export default function CustomerApp() {
     setNotes('');
   };
 
+  const handleSimulatePaymentSuccess = async () => {
+    try {
+      setPaymentStatus('success');
+      
+      // Create order in Supabase
+      const orderData = {
+        tableNumber: tableNumber,
+        customerPhone: customerWhatsApp || '+62 812-3456-7890',
+        orderType: orderType.toLowerCase().replace(' ', '-') as 'dine-in' | 'takeaway',
+        items: cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          category: item.category,
+          image: item.image,
+          isPromo: item.isPromo,
+          quantity: item.quantity,
+          selectedOptions: item.selectedOptions,
+          notes: item.notes,
+          totalPrice: item.totalPrice,
+        })),
+        totalAmount: finalTotal,
+        notes: additionalNotes,
+      };
+
+      const response = await fetch('/api/qris-orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setOrderId(result.data.orderId);
+        alert('Pembayaran berhasil! Pesanan telah dikirim ke kasir untuk konfirmasi.');
+      } else {
+        throw new Error(result.error || 'Gagal membuat pesanan');
+      }
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert('Terjadi kesalahan saat membuat pesanan. Silakan coba lagi.');
+      setPaymentStatus('pending');
+    }
+  };
+
+  const handleSimulatePaymentFailed = () => {
+    setPaymentStatus('failed');
+    alert('Pembayaran gagal! Silakan coba lagi.');
+    setTimeout(() => {
+      setPaymentStatus('pending');
+    }, 3000);
+  };
+
   const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalCartAmount = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  const serviceCharge = Math.round(totalCartAmount * 0.1); // 10% service charge
-  const finalTotal = totalCartAmount + serviceCharge;
+  const finalTotal = totalCartAmount; // Total tanpa service charge
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-orange-500 mx-auto mb-4" />
+          <p className="text-gray-600">Memuat menu...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-400 mb-4">
+            <Search className="w-16 h-16 mx-auto" />
+          </div>
+          <p className="text-red-600 text-lg mb-2">Terjadi kesalahan</p>
+          <p className="text-gray-500 mb-4">{error}</p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="bg-orange-600 hover:bg-orange-700"
+          >
+            Coba Lagi
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // Menu View
   if (currentView === 'menu') {
@@ -478,38 +344,54 @@ export default function CustomerApp() {
 
           {/* Menu Items Grid */}
           <div className="px-6 py-6">
-            <div className="grid grid-cols-2 gap-4">
-              {filteredItems.map((item) => (
-                <Card key={item.id} className="relative bg-white rounded-2xl shadow-lg border-0 overflow-hidden hover:shadow-xl transition-all duration-300">
-                  <CardContent className="p-0">
-                    {/* Image Container - Clickable */}
-                    <div className="relative mb-4 cursor-pointer" onClick={() => openProductDetail(item)}>
-                      <div className="w-full h-40 bg-gray-100 rounded-full mx-auto mt-4 flex items-center justify-center overflow-hidden" style={{ width: '120px', height: '120px' }}>
-                        <img src={item.image || '/placeholder.svg'} alt={item.name} className="w-full h-full object-cover rounded-full" />
+            {filteredItems.length === 0 ? (
+              <div className="text-center py-12">
+                <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 mb-2">Tidak ada menu ditemukan</p>
+                <p className="text-gray-400 text-sm">Coba ubah kategori atau kata kunci pencarian</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {filteredItems.map((item) => (
+                  <Card key={item.id} className="relative bg-white rounded-2xl shadow-lg border-0 overflow-hidden hover:shadow-xl transition-all duration-300">
+                    <CardContent className="p-0">
+                      {/* Image Container - Clickable */}
+                      <div className="relative mb-4 cursor-pointer" onClick={() => openProductDetail(item)}>
+                        <div className="w-full h-40 bg-gray-100 rounded-full mx-auto mt-4 flex items-center justify-center overflow-hidden" style={{ width: '120px', height: '120px' }}>
+                          <img src={item.image || '/placeholder.svg'} alt={item.name} className="w-full h-full object-cover rounded-full" />
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Content - Clickable */}
-                    <div className="px-4 pb-4 space-y-1 cursor-pointer" onClick={() => openProductDetail(item)}>
-                      <h3 className="font-bold text-gray-900 text-lg leading-tight">{item.name}</h3>
-                      <p className="text-gray-500 text-sm">{item.category}</p>
-                      <p className="font-bold text-orange-500 text-lg">Rp {item.price.toLocaleString('id-ID')}</p>
-                    </div>
+                      {/* Content - Clickable */}
+                      <div className="px-4 pb-4 space-y-1 cursor-pointer" onClick={() => openProductDetail(item)}>
+                        <h3 className="font-bold text-gray-900 text-lg leading-tight">{item.name}</h3>
+                        <p className="text-gray-500 text-sm">{item.category}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-orange-500 text-lg">Rp {item.price.toLocaleString('id-ID')}</p>
+                          {item.originalPrice && item.originalPrice > item.price && (
+                            <p className="text-gray-400 text-sm line-through">Rp {item.originalPrice.toLocaleString('id-ID')}</p>
+                          )}
+                        </div>
+                        {item.isPromo && (
+                          <Badge className="bg-red-500 text-white text-xs">PROMO</Badge>
+                        )}
+                      </div>
 
-                    {/* Add Button - positioned at bottom right edge */}
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openAddToCartModal(item);
-                      }}
-                      className="absolute -bottom-0 -right-0 w-12 h-12 rounded-tl-2xl rounded-br-2xl bg-orange-500 hover:bg-orange-500 p-0 shadow-md border-0"
-                    >
-                      <Plus className="w-5 h-5 text-white" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      {/* Add Button - positioned at bottom right edge */}
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openAddToCartModal(item);
+                        }}
+                        className="absolute -bottom-0 -right-0 w-12 h-12 rounded-tl-2xl rounded-br-2xl bg-orange-500 hover:bg-orange-500 p-0 shadow-md border-0"
+                      >
+                        <Plus className="w-5 h-5 text-white" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -538,7 +420,12 @@ export default function CustomerApp() {
                   <div className="p-4 bg-white border-b">
                     <div className="flex justify-between items-center">
                       <h4 className="text-xl font-semibold text-gray-900">{selectedItem.name}</h4>
-                      <span className="text-lg font-semibold text-gray-900">{selectedItem.price.toLocaleString('id-ID')}</span>
+                      <div className="text-right">
+                        <span className="text-lg font-semibold text-gray-900">{selectedItem.price.toLocaleString('id-ID')}</span>
+                        {selectedItem.originalPrice && selectedItem.originalPrice > selectedItem.price && (
+                          <div className="text-sm text-gray-400 line-through">Rp {selectedItem.originalPrice.toLocaleString('id-ID')}</div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -636,7 +523,15 @@ export default function CustomerApp() {
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">{selectedItem.name}</h1>
             <p className="text-gray-600 mb-4 leading-relaxed">{selectedItem.description}</p>
-            <p className="text-2xl font-bold text-orange-500">Rp {selectedItem.price.toLocaleString('id-ID')}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-2xl font-bold text-orange-500">Rp {selectedItem.price.toLocaleString('id-ID')}</p>
+              {selectedItem.originalPrice && selectedItem.originalPrice > selectedItem.price && (
+                <p className="text-lg text-gray-400 line-through">Rp {selectedItem.originalPrice.toLocaleString('id-ID')}</p>
+              )}
+            </div>
+            {selectedItem.isPromo && (
+              <Badge className="bg-red-500 text-white mt-2">PROMO</Badge>
+            )}
           </div>
 
           {/* Options */}
@@ -898,15 +793,7 @@ export default function CustomerApp() {
 
                   {/* Price Breakdown */}
                   <div className="border-t pt-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Subtotal</span>
-                      <span className="text-orange-500">Rp {totalCartAmount.toLocaleString('id-ID')}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Biaya Layanan (10%)</span>
-                      <span className="text-orange-500">Rp {serviceCharge.toLocaleString('id-ID')}</span>
-                    </div>
-                    <div className="flex justify-between font-semibold text-lg border-t pt-2">
+                    <div className="flex justify-between font-semibold text-lg">
                       <span>Total</span>
                       <span className="text-orange-500">Rp {finalTotal.toLocaleString('id-ID')}</span>
                     </div>
@@ -921,11 +808,11 @@ export default function CustomerApp() {
         {cart.length > 0 && (
           <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-lg font-semibold">Total Akhir:</span>
+              <span className="text-lg font-semibold">Total:</span>
               <span className="text-xl font-bold text-orange-500">Rp {finalTotal.toLocaleString('id-ID')}</span>
             </div>
             <Button
-              className="w-full bg-orange--500 hover:bg-orange-500 text-white py-4 text-lg font-semibold"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 text-lg font-semibold"
               onClick={() => {
                 if (paymentMethod === 'QRIS') {
                   setCurrentView('qris');
@@ -985,6 +872,74 @@ export default function CustomerApp() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Payment Status */}
+          {paymentStatus === 'success' && (
+            <Card className="mb-6 border-green-500 bg-green-50">
+              <CardContent className="p-4 text-center">
+                <div className="text-green-600 mb-2">
+                  <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-green-800 mb-2">Pembayaran Berhasil!</h3>
+                <p className="text-green-700 mb-2">Pesanan telah dikirim ke kasir</p>
+                {orderId && (
+                  <p className="text-sm text-green-600">Order ID: {orderId}</p>
+                )}
+                <Button 
+                  onClick={() => {
+                    setCurrentView('menu');
+                    setCart([]);
+                    setPaymentStatus('pending');
+                    setOrderId(null);
+                  }}
+                  className="mt-3 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Kembali ke Menu
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {paymentStatus === 'failed' && (
+            <Card className="mb-6 border-red-500 bg-red-50">
+              <CardContent className="p-4 text-center">
+                <div className="text-red-600 mb-2">
+                  <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-red-800 mb-2">Pembayaran Gagal!</h3>
+                <p className="text-red-700">Silakan coba lagi</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {paymentStatus === 'pending' && (
+            <>
+              {/* Simulasi Pembayaran */}
+              <Card className="mb-6">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Simulasi Pembayaran</h3>
+                  <div className="space-y-3">
+                    <Button 
+                      onClick={handleSimulatePaymentSuccess}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-lg"
+                    >
+                      ✅ Simulasi Pembayaran Berhasil
+                    </Button>
+                    <Button 
+                      onClick={handleSimulatePaymentFailed}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white py-3 text-lg"
+                    >
+                      ❌ Simulasi Pembayaran Gagal
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
 
           {/* Action Buttons */}
           <div className="space-y-3 mb-6">

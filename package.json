@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
     "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "lint": "next lint",
-    "start": "next start"
+    "seed-qris": "tsx scripts/seed-qris-notifications.ts",
+    "seed-menu": "tsx scripts/seed-menu-items.ts",
+    "check-db": "tsx scripts/check-database-setup.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
