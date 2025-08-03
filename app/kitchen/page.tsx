@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChefHat, Settings, Bell, User, Play, Check, Clock, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
+import { AuthGuard } from '@/components/auth/AuthGuard';
+import { UserInfo } from '@/components/auth/UserInfo';
 
 interface OrderItem {
   name: string;
@@ -207,78 +209,78 @@ export default function KitchenDisplay() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link href="/" className="flex items-center space-x-2">
-              <span className="text-2xl font-bold text-orange-500">KITCHEN DISPLAY</span>
-            </Link>
-            <div className="text-sm text-orange-500">
-              {currentTime.toLocaleTimeString('id-ID', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-              })}
+    <AuthGuard requiredRole="kitchen">
+      <div className="min-h-screen bg-gray-100">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b">
+          <div className="px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Link href="/" className="flex items-center space-x-2">
+                <span className="text-2xl font-bold text-orange-500">KITCHEN DISPLAY</span>
+              </Link>
+              <div className="text-sm text-orange-500">
+                {currentTime.toLocaleTimeString('id-ID', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                })}
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="sm" className="text-orange-500">
+                <Bell className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="sm" className="text-orange-500">
+                <Settings className="w-4 h-4" />
+              </Button>
+              <UserInfo />
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-orange-500">
-              <Bell className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" className="text-orange-500">
-              <Settings className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" className="text-orange-500">
-              <User className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="p-6">
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Minuman Column */}
-          <div className={`${categoryConfig['minuman'].bgColor} rounded-lg p-4`}>
-            <div className={`${categoryConfig['minuman'].headerColor} text-white p-3 rounded-lg mb-4`}>
-              <h2 className="text-lg font-bold text-center">{categoryConfig['minuman'].label}</h2>
+        <div className="p-6">
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Minuman Column */}
+            <div className={`${categoryConfig['minuman'].bgColor} rounded-lg p-4`}>
+              <div className={`${categoryConfig['minuman'].headerColor} text-white p-3 rounded-lg mb-4`}>
+                <h2 className="text-lg font-bold text-center">{categoryConfig['minuman'].label}</h2>
+              </div>
+              <div className="space-y-4">
+                {getOrdersByCategory('minuman').map((order) => (
+                  <OrderCard key={order.id} order={order} />
+                ))}
+                {getOrdersByCategory('minuman').length === 0 && <div className="text-center text-gray-500 py-8">No drink orders</div>}
+              </div>
             </div>
-            <div className="space-y-4">
-              {getOrdersByCategory('minuman').map((order) => (
-                <OrderCard key={order.id} order={order} />
-              ))}
-              {getOrdersByCategory('minuman').length === 0 && <div className="text-center text-gray-500 py-8">No drink orders</div>}
-            </div>
-          </div>
 
-          {/* Makanan Column */}
-          <div className={`${categoryConfig['makanan'].bgColor} rounded-lg p-4`}>
-            <div className={`${categoryConfig['makanan'].headerColor} text-white p-3 rounded-lg mb-4`}>
-              <h2 className="text-lg font-bold text-center">{categoryConfig['makanan'].label}</h2>
+            {/* Makanan Column */}
+            <div className={`${categoryConfig['makanan'].bgColor} rounded-lg p-4`}>
+              <div className={`${categoryConfig['makanan'].headerColor} text-white p-3 rounded-lg mb-4`}>
+                <h2 className="text-lg font-bold text-center">{categoryConfig['makanan'].label}</h2>
+              </div>
+              <div className="space-y-4">
+                {getOrdersByCategory('makanan').map((order) => (
+                  <OrderCard key={order.id} order={order} />
+                ))}
+                {getOrdersByCategory('makanan').length === 0 && <div className="text-center text-gray-500 py-8">No food orders</div>}
+              </div>
             </div>
-            <div className="space-y-4">
-              {getOrdersByCategory('makanan').map((order) => (
-                <OrderCard key={order.id} order={order} />
-              ))}
-              {getOrdersByCategory('makanan').length === 0 && <div className="text-center text-gray-500 py-8">No food orders</div>}
-            </div>
-          </div>
 
-          {/* Dessert Column */}
-          <div className={`${categoryConfig['dessert'].bgColor} rounded-lg p-4`}>
-            <div className={`${categoryConfig['dessert'].headerColor} text-white p-3 rounded-lg mb-4`}>
-              <h2 className="text-lg font-bold text-center">{categoryConfig['dessert'].label}</h2>
-            </div>
-            <div className="space-y-4">
-              {getOrdersByCategory('dessert').map((order) => (
-                <OrderCard key={order.id} order={order} />
-              ))}
-              {getOrdersByCategory('dessert').length === 0 && <div className="text-center text-gray-500 py-8">No dessert orders</div>}
+            {/* Dessert Column */}
+            <div className={`${categoryConfig['dessert'].bgColor} rounded-lg p-4`}>
+              <div className={`${categoryConfig['dessert'].headerColor} text-white p-3 rounded-lg mb-4`}>
+                <h2 className="text-lg font-bold text-center">{categoryConfig['dessert'].label}</h2>
+              </div>
+              <div className="space-y-4">
+                {getOrdersByCategory('dessert').map((order) => (
+                  <OrderCard key={order.id} order={order} />
+                ))}
+                {getOrdersByCategory('dessert').length === 0 && <div className="text-center text-gray-500 py-8">No dessert orders</div>}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 }

@@ -2,8 +2,8 @@
 
 import type { ReactNode } from 'react';
 import { Coffee, Tag, History, Package, Settings, Bell, BarChart3 } from 'lucide-react';
-import { NotificationPanel } from './NotificationPanel';
 import type { NavigationPage, QRISNotification } from '@/app/cashier/page';
+import { UserInfo } from '@/components/auth/UserInfo';
 
 interface CashierLayoutProps {
   children: ReactNode;
@@ -26,7 +26,7 @@ export function CashierLayout({ children, currentPage, onNavigate, notifications
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Left Sidebar - Updated styling */}
+      {/* Sidebar */}
       <div className="w-64 bg-white flex flex-col shadow-lg fixed left-0 top-0 h-full z-10">
         {/* Logo */}
         <div className="p-6 border-b border-gray-100">
@@ -38,9 +38,9 @@ export function CashierLayout({ children, currentPage, onNavigate, notifications
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4">
-          <div className="space-y-2">
+        {/* Navigation & User Info */}
+        <div className="flex-1 flex flex-col justify-between p-4">
+          <nav className="space-y-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;
@@ -58,23 +58,19 @@ export function CashierLayout({ children, currentPage, onNavigate, notifications
                 </button>
               );
             })}
-          </div>
-        </nav>
+          </nav>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-100">
-          <p className="text-sm text-gray-400">© 2024 CoffeePOS</p>
+          {/* User Info Pindah ke sini */}
+          <div className="pt-6 border-t border-gray-100">
+            <UserInfo />
+          </div>
         </div>
       </div>
 
-      {/* Main Content - Offset by sidebar width */}
+      {/* Main Content */}
       <div className="flex-1 flex flex-col ml-64">
-        {/* Header - Only show notifications on menu page */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
-          <div className="flex items-center justify-end">{currentPage === 'menu' && notifications.length > 0 && <NotificationPanel notifications={notifications} onAction={onNotificationAction} />}</div>
-        </header>
+        {/* Header tidak digunakan */}
 
-        {/* Page Content */}
         <main className="flex-1 overflow-auto bg-gray-50">{children}</main>
       </div>
     </div>

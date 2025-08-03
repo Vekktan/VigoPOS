@@ -11,11 +11,7 @@ import type { MenuItem, CartItem, Category, Order } from '@/app/cashier/page';
 import { useItems } from '@/hooks/useItems';
 import { useCategories } from '@/hooks/useCategories';
 
-export function MenuPage({ cart, setCart, onOrderComplete }: {
-  cart: CartItem[];
-  setCart: (cart: CartItem[]) => void;
-  onOrderComplete: (order: Order) => void;
-}) {
+export function MenuPage({ cart, setCart, onOrderComplete }: { cart: CartItem[]; setCart: (cart: CartItem[]) => void; onOrderComplete: (order: Order) => void }) {
   const { items: menuItems, loading: itemsLoading, error: itemsError } = useItems();
   const { categories, loading: categoriesLoading, error: categoriesError } = useCategories();
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -25,7 +21,11 @@ export function MenuPage({ cart, setCart, onOrderComplete }: {
 
   // Loading and error state
   if (itemsLoading || categoriesLoading) {
-    return <div className="flex items-center justify-center h-64"><span>Loading...</span></div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <span>Loading...</span>
+      </div>
+    );
   }
   if (itemsError || categoriesError) {
     return <div className="flex items-center justify-center h-64 text-red-600">{itemsError || categoriesError}</div>;
@@ -96,6 +96,19 @@ export function MenuPage({ cart, setCart, onOrderComplete }: {
       <div className="flex h-full">
         {/* Main Content */}
         <div className={`flex-1 p-6 transition-all duration-300 ${showCart ? 'mr-80' : ''}`}>
+          {/* Menu Header */}
+          <div className="mb-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                <Search className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">Menu Makanan & Minuman</h2>
+                <p className="text-gray-600">Pilih menu favoritmu untuk dipesan</p>
+              </div>
+            </div>
+          </div>
+
           {/* Search */}
           <div className="relative mb-6">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />

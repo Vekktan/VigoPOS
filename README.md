@@ -4,6 +4,7 @@ A modern POS system built with React, Next.js, and Supabase for coffee shops and
 
 ## Features
 
+- **Authentication System**: Role-based access control with secure login
 - **Menu Management**: Add, edit, and delete menu items with custom options
 - **Category Management**: Organize items into categories with icons
 - **Item Options**: Configure size, flavor, and add-on options with pricing
@@ -14,7 +15,20 @@ A modern POS system built with React, Next.js, and Supabase for coffee shops and
 
 ### Tables
 
-1. **categories**
+1. **users**
+
+   - `id` (UUID, Primary Key)
+   - `email` (VARCHAR, Unique)
+   - `password_hash` (VARCHAR)
+   - `full_name` (VARCHAR)
+   - `role` (VARCHAR, 'admin', 'cashier', 'kitchen', 'manager')
+   - `is_active` (BOOLEAN)
+   - `last_login` (TIMESTAMP)
+   - `created_at` (TIMESTAMP)
+   - `updated_at` (TIMESTAMP)
+
+2. **categories**
+
    - `id` (UUID, Primary Key)
    - `name` (VARCHAR, Unique)
    - `description` (TEXT)
@@ -22,7 +36,8 @@ A modern POS system built with React, Next.js, and Supabase for coffee shops and
    - `created_at` (TIMESTAMP)
    - `updated_at` (TIMESTAMP)
 
-2. **items**
+3. **items**
+
    - `id` (UUID, Primary Key)
    - `name` (VARCHAR)
    - `description` (TEXT)
@@ -34,7 +49,8 @@ A modern POS system built with React, Next.js, and Supabase for coffee shops and
    - `created_at` (TIMESTAMP)
    - `updated_at` (TIMESTAMP)
 
-3. **item_options**
+4. **item_options**
+
    - `id` (UUID, Primary Key)
    - `item_id` (UUID, Foreign Key to items)
    - `name` (VARCHAR)
@@ -43,7 +59,7 @@ A modern POS system built with React, Next.js, and Supabase for coffee shops and
    - `created_at` (TIMESTAMP)
    - `updated_at` (TIMESTAMP)
 
-4. **item_option_values**
+5. **item_option_values**
    - `id` (UUID, Primary Key)
    - `item_option_id` (UUID, Foreign Key to item_options)
    - `name` (VARCHAR)
@@ -73,10 +89,17 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ### 3. Install Dependencies
 
 ```bash
-npm install @supabase/supabase-js
+npm install @supabase/supabase-js bcryptjs
+npm install --save-dev @types/bcryptjs
 ```
 
-### 4. Run the Application
+### 4. Seed Users
+
+```bash
+npm run seed-users
+```
+
+### 5. Run the Application
 
 ```bash
 npm run dev
@@ -102,14 +125,26 @@ npm run dev
 
 ## Custom Hooks
 
+### useAuth()
+
+Manages authentication state and user session:
+
+```typescript
+const { user, isAuthenticated, login, logout, hasRole } = useAuth();
+```
+
 ### useItems()
+
 Manages item state and API calls:
+
 ```typescript
 const { items, loading, error, createItem, updateItem, deleteItem } = useItems();
 ```
 
 ### useCategories()
+
 Manages category state and API calls:
+
 ```typescript
 const { categories, loading, error, createCategory, updateCategory, deleteCategory } = useCategories();
 ```
@@ -153,7 +188,16 @@ options: {
 
 ## Features
 
+### Authentication System
+
+- Role-based access control (Admin, Cashier, Kitchen, Manager)
+- Secure login with email and password
+- Session management with localStorage
+- User profile display and logout functionality
+- Protected routes for different user roles
+
 ### Menu Management
+
 - Add new menu items with detailed information
 - Configure item options with pricing
 - Set promotional pricing with original price
@@ -161,18 +205,21 @@ options: {
 - Upload item images
 
 ### Category Management
+
 - Create and manage item categories
 - Assign icons to categories
 - View item count per category
 - Edit and delete categories
 
 ### Item Options
+
 - Single choice options (e.g., Size, Sugar Level)
 - Multiple choice options (e.g., Extras, Toppings)
 - Required vs optional options
 - Custom pricing for each option value
 
 ### Promotional Items
+
 - Mark items as promotional
 - Set discount percentage
 - Display original and discounted prices

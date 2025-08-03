@@ -1,6 +1,19 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Create users table for authentication
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  full_name VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'cashier', 'kitchen', 'manager')),
+  is_active BOOLEAN DEFAULT TRUE,
+  last_login TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Create categories table
 CREATE TABLE IF NOT EXISTS categories (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -80,6 +93,9 @@ CREATE TABLE IF NOT EXISTS qris_notifications (
 );
 
 -- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_is_active ON users(is_active);
 CREATE INDEX IF NOT EXISTS idx_items_category_id ON items(category_id);
 CREATE INDEX IF NOT EXISTS idx_items_is_promo ON items(is_promo);
 CREATE INDEX IF NOT EXISTS idx_item_options_item_id ON item_options(item_id);
@@ -100,6 +116,9 @@ END;
 $$ language 'plpgsql';
 
 -- Create triggers to automatically update updated_at
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON categories
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -117,6 +136,14 @@ CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders
 
 CREATE TRIGGER update_qris_notifications_updated_at BEFORE UPDATE ON qris_notifications
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Insert sample users (password: 123456)
+INSERT INTO users (id, email, password_hash, full_name, role) VALUES
+  ('880e8400-e29b-41d4-a716-446655440001', 'admin@rokacoffee.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administrator', 'admin'),
+  ('880e8400-e29b-41d4-a716-446655440002', 'cashier@rokacoffee.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Cashier Staff', 'cashier'),
+  ('880e8400-e29b-41d4-a716-446655440003', 'kitchen@rokacoffee.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Kitchen Staff', 'kitchen'),
+  ('880e8400-e29b-41d4-a716-446655440004', 'manager@rokacoffee.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Manager', 'manager')
+ON CONFLICT (email) DO NOTHING;
 
 -- Insert sample data
 INSERT INTO categories (id, name, description, icon) VALUES

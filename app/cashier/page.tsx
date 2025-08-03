@@ -11,6 +11,7 @@ import { NotificationPage } from '@/components/cashier/NotificationPage';
 import { SalesReportPage } from '@/components/cashier/SalesReportPage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useQRISNotifications } from '@/hooks/useQRISNotifications';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 
 export type NavigationPage = 'menu' | 'promo' | 'notification' | 'history' | 'items' | 'sales-report' | 'settings';
 
@@ -139,7 +140,7 @@ const generateDummyOrders = (): Order[] => {
 export default function CashierPage() {
   const [currentPage, setCurrentPage] = useState<NavigationPage>('menu');
   const [cart, setCart] = useState<CartItem[]>([]);
-  
+
   // Use QRIS notifications hook instead of dummy data
   const { notifications, loading: notificationsLoading, error: notificationsError, updateNotificationStatus } = useQRISNotifications();
 
@@ -314,7 +315,7 @@ export default function CashierPage() {
 
   const handleNotificationAction = async (notificationId: string, action: 'accept' | 'reject' | 'send-to-kitchen') => {
     const success = await updateNotificationStatus(notificationId, action);
-    
+
     if (success) {
       const notification = notifications.find((n) => n.id === notificationId);
       if (!notification) return;
@@ -421,17 +422,18 @@ Mohon maaf atas ketidaknyamanannya 🙏
           />
         );
       case 'promo':
-        return <PromoPage cart={cart} setCart={setCart} onOrderComplete={(order) => {
-          setOrders((prev) => [order, ...prev]);
-          setCart([]);
-        }} />;
+        return (
+          <PromoPage
+            cart={cart}
+            setCart={setCart}
+            onOrderComplete={(order) => {
+              setOrders((prev) => [order, ...prev]);
+              setCart([]);
+            }}
+          />
+        );
       case 'notification':
-        return <NotificationPage 
-          notifications={notifications} 
-          onNotificationAction={handleNotificationAction}
-          loading={notificationsLoading}
-          error={notificationsError}
-        />;
+        return <NotificationPage notifications={notifications} onNotificationAction={handleNotificationAction} loading={notificationsLoading} error={notificationsError} />;
       case 'history':
         return <HistoryPage />;
       case 'items':
@@ -447,14 +449,11 @@ Mohon maaf atas ketidaknyamanannya 🙏
 
   return (
     <ErrorBoundary>
-      <CashierLayout
-        currentPage={currentPage}
-        onNavigate={setCurrentPage}
-        notifications={currentPage === 'menu' ? notifications : []}
-        onNotificationAction={handleNotificationAction}
-      >
-        {renderCurrentPage()}
-      </CashierLayout>
+      <AuthGuard requiredRole="cashier">
+        <CashierLayout currentPage={currentPage} onNavigate={setCurrentPage} notifications={currentPage === 'menu' ? notifications : []} onNotificationAction={handleNotificationAction}>
+          {renderCurrentPage()}
+        </CashierLayout>
+      </AuthGuard>
     </ErrorBoundary>
   );
 }
