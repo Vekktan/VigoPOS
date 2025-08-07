@@ -228,9 +228,6 @@ export default function KitchenDisplay() {
             </div>
             <div className="flex items-center space-x-4">
               <Button variant="ghost" size="sm" className="text-orange-500">
-                <Bell className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="sm" className="text-orange-500">
                 <Settings className="w-4 h-4" />
               </Button>
               <UserInfo />

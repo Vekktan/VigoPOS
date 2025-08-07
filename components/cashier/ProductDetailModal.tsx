@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Star, Plus, Minus } from 'lucide-react';
 import { StatusIndicator } from '@/components/StatusIndicator';
 import type { MenuItem } from '@/app/cashier/page';
+import { DialogClose } from '@/components/ui/dialog';
+import { X } from 'lucide-react';
 
 interface ProductDetailModalProps {
   item: MenuItem;

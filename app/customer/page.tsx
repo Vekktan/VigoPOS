@@ -22,8 +22,10 @@ interface CartItem extends MenuItem {
 }
 
 export default function CustomerApp() {
+  const [isHowToPayOpen, setIsHowToPayOpen] = useState(false);
+
   const { menuItems, categories, loading, error } = useMenuItems();
-  
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('Coffee');
   const [searchQuery, setSearchQuery] = useState('');
@@ -210,13 +212,13 @@ export default function CustomerApp() {
   const handleSimulatePaymentSuccess = async () => {
     try {
       setPaymentStatus('success');
-      
+
       // Create order in Supabase
       const orderData = {
         tableNumber: tableNumber,
         customerPhone: customerWhatsApp || '+62 812-3456-7890',
         orderType: orderType.toLowerCase().replace(' ', '-') as 'dine-in' | 'takeaway',
-        items: cart.map(item => ({
+        items: cart.map((item) => ({
           id: item.id,
           name: item.name,
           description: item.description,
@@ -242,7 +244,7 @@ export default function CustomerApp() {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         setOrderId(result.data.orderId);
         alert('Pembayaran berhasil! Pesanan telah dikirim ke kasir untuk konfirmasi.');
@@ -290,10 +292,7 @@ export default function CustomerApp() {
           </div>
           <p className="text-red-600 text-lg mb-2">Terjadi kesalahan</p>
           <p className="text-gray-500 mb-4">{error}</p>
-          <Button 
-            onClick={() => window.location.reload()} 
-            className="bg-orange-600 hover:bg-orange-700"
-          >
+          <Button onClick={() => window.location.reload()} className="bg-orange-600 hover:bg-orange-700">
             Coba Lagi
           </Button>
         </div>
@@ -357,6 +356,11 @@ export default function CustomerApp() {
                     <CardContent className="p-0">
                       {/* Image Container - Clickable */}
                       <div className="relative mb-4 cursor-pointer" onClick={() => openProductDetail(item)}>
+                        {item.isPromo && (
+                          <div className="absolute top-2 left-2 z-1">
+                            <Badge className="bg-red-500 text-white text-xs px-2 py-1">PROMO</Badge>
+                          </div>
+                        )}
                         <div className="w-full h-40 bg-gray-100 rounded-full mx-auto mt-4 flex items-center justify-center overflow-hidden" style={{ width: '120px', height: '120px' }}>
                           <img src={item.image || '/placeholder.svg'} alt={item.name} className="w-full h-full object-cover rounded-full" />
                         </div>
@@ -366,15 +370,19 @@ export default function CustomerApp() {
                       <div className="px-4 pb-4 space-y-1 cursor-pointer" onClick={() => openProductDetail(item)}>
                         <h3 className="font-bold text-gray-900 text-lg leading-tight">{item.name}</h3>
                         <p className="text-gray-500 text-sm">{item.category}</p>
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-orange-500 text-lg">Rp {item.price.toLocaleString('id-ID')}</p>
-                          {item.originalPrice && item.originalPrice > item.price && (
-                            <p className="text-gray-400 text-sm line-through">Rp {item.originalPrice.toLocaleString('id-ID')}</p>
-                          )}
+                        <div>
+                          {/* Mobile: harga coret di atas */}
+                          <div className="block md:hidden">
+                            {item.originalPrice && item.originalPrice > item.price ? <p className="text-gray-400 text-xs line-through">Rp {item.originalPrice.toLocaleString('id-ID')}</p> : <p className="text-xs invisible">Rp 0</p>}
+                            <p className={`font-bold text-orange-500 ${item.price > 100_000 ? 'text-base max-[360px]:text-sm' : 'text-lg max-[360px]:text-base'}`}>Rp {item.price.toLocaleString('id-ID')}</p>
+                          </div>
+
+                          {/* Tablet & Desktop: harga coret di samping kanan */}
+                          <div className="hidden md:flex md:items-center md:gap-2">
+                            <p className="font-bold text-orange-500 text-lg">Rp {item.price.toLocaleString('id-ID')}</p>
+                            {item.originalPrice && item.originalPrice > item.price && <p className="text-gray-400 text-sm line-through">Rp {item.originalPrice.toLocaleString('id-ID')}</p>}
+                          </div>
                         </div>
-                        {item.isPromo && (
-                          <Badge className="bg-red-500 text-white text-xs">PROMO</Badge>
-                        )}
                       </div>
 
                       {/* Add Button - positioned at bottom right edge */}
@@ -406,9 +414,6 @@ export default function CustomerApp() {
               <div className="flex flex-col h-full">
                 {/* HEADER */}
                 <div className="flex items-center justify-between p-4 border-b bg-white">
-                  <Button variant="ghost" size="sm" onClick={closeModal} className="p-1">
-                    <ArrowLeft className="w-5 h-5 text-gray-600" />
-                  </Button>
                   <h3 className="text-lg font-semibold text-gray-900">{editingCartIndex !== null ? 'Edit pembelian' : 'Custom pembelian'}</h3>
 
                   <div className="w-8"></div>
@@ -422,9 +427,7 @@ export default function CustomerApp() {
                       <h4 className="text-xl font-semibold text-gray-900">{selectedItem.name}</h4>
                       <div className="text-right">
                         <span className="text-lg font-semibold text-gray-900">{selectedItem.price.toLocaleString('id-ID')}</span>
-                        {selectedItem.originalPrice && selectedItem.originalPrice > selectedItem.price && (
-                          <div className="text-sm text-gray-400 line-through">Rp {selectedItem.originalPrice.toLocaleString('id-ID')}</div>
-                        )}
+                        {selectedItem.originalPrice && selectedItem.originalPrice > selectedItem.price && <div className="text-sm text-gray-400 line-through">Rp {selectedItem.originalPrice.toLocaleString('id-ID')}</div>}
                       </div>
                     </div>
                   </div>
@@ -525,13 +528,9 @@ export default function CustomerApp() {
             <p className="text-gray-600 mb-4 leading-relaxed">{selectedItem.description}</p>
             <div className="flex items-center gap-2">
               <p className="text-2xl font-bold text-orange-500">Rp {selectedItem.price.toLocaleString('id-ID')}</p>
-              {selectedItem.originalPrice && selectedItem.originalPrice > selectedItem.price && (
-                <p className="text-lg text-gray-400 line-through">Rp {selectedItem.originalPrice.toLocaleString('id-ID')}</p>
-              )}
+              {selectedItem.originalPrice && selectedItem.originalPrice > selectedItem.price && <p className="text-lg text-gray-400 line-through">Rp {selectedItem.originalPrice.toLocaleString('id-ID')}</p>}
             </div>
-            {selectedItem.isPromo && (
-              <Badge className="bg-red-500 text-white mt-2">PROMO</Badge>
-            )}
+            {selectedItem.isPromo && <Badge className="bg-red-500 text-white mt-2">PROMO</Badge>}
           </div>
 
           {/* Options */}
@@ -884,10 +883,8 @@ export default function CustomerApp() {
                 </div>
                 <h3 className="text-lg font-semibold text-green-800 mb-2">Pembayaran Berhasil!</h3>
                 <p className="text-green-700 mb-2">Pesanan telah dikirim ke kasir</p>
-                {orderId && (
-                  <p className="text-sm text-green-600">Order ID: {orderId}</p>
-                )}
-                <Button 
+                {orderId && <p className="text-sm text-green-600">Order ID: {orderId}</p>}
+                <Button
                   onClick={() => {
                     setCurrentView('menu');
                     setCart([]);
@@ -923,16 +920,10 @@ export default function CustomerApp() {
                 <CardContent className="p-4">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Simulasi Pembayaran</h3>
                   <div className="space-y-3">
-                    <Button 
-                      onClick={handleSimulatePaymentSuccess}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-lg"
-                    >
+                    <Button onClick={handleSimulatePaymentSuccess} className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-lg">
                       ✅ Simulasi Pembayaran Berhasil
                     </Button>
-                    <Button 
-                      onClick={handleSimulatePaymentFailed}
-                      className="w-full bg-red-600 hover:bg-red-700 text-white py-3 text-lg"
-                    >
+                    <Button onClick={handleSimulatePaymentFailed} className="w-full bg-red-600 hover:bg-red-700 text-white py-3 text-lg">
                       ❌ Simulasi Pembayaran Gagal
                     </Button>
                   </div>
@@ -954,12 +945,24 @@ export default function CustomerApp() {
           </div>
 
           {/* How to Pay Dropdown */}
-          <Card>
+          <Card className="my-4">
             <CardContent className="p-4">
-              <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+              <Button variant="ghost" className="w-full justify-between p-0 h-auto" onClick={() => setIsHowToPayOpen(!isHowToPayOpen)}>
                 <span className="text-gray-700">How to pay with QRIS</span>
-                <ChevronDown className="w-5 h-5 text-gray-400" />
+                {isHowToPayOpen ? <ChevronDown className="w-5 h-5 text-gray-400 rotate-180 transition-transform" /> : <ChevronDown className="w-5 h-5 text-gray-400 transition-transform" />}
               </Button>
+
+              {isHowToPayOpen && (
+                <div className="mt-4 text-sm text-gray-600">
+                  1. Buka aplikasi e-wallet kamu (OVO, DANA, GoPay, dll).
+                  <br />
+                  2. Pilih menu QRIS / Scan.
+                  <br />
+                  3. Arahkan ke QR kasir.
+                  <br />
+                  4. Konfirmasi pembayaran dan selesai.
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

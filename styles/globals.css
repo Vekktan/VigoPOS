@@ -92,3 +92,18 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Tambahkan di sini */
+@media (max-width: 360px) {
+  h3.text-lg {
+    font-size: 0.875rem;
+  }
+
+  p.text-sm {
+    font-size: 0.75rem;
+  }
+
+  p.text-lg {
+    font-size: 1rem;
+  }
+}

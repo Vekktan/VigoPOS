@@ -47,7 +47,7 @@ const availableIcons = [
 export function ItemsPage() {
   const { items: menuItems, loading: itemsLoading, error: itemsError, createItem, updateItem, deleteItem } = useItems();
   const { categories, loading: categoriesLoading, error: categoriesError, createCategory, updateCategory, deleteCategory } = useCategories();
-  
+
   const [showItemDialog, setShowItemDialog] = useState(false);
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -171,9 +171,9 @@ export function ItemsPage() {
   const handleSaveItem = async () => {
     if (!itemForm.name || !itemForm.price || !itemForm.category) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Please fill in all required fields',
+        variant: 'destructive',
       });
       return;
     }
@@ -215,14 +215,14 @@ export function ItemsPage() {
       if (editingItem) {
         await updateItem(editingItem.id, itemData, Object.keys(options).length > 0 ? options : undefined);
         toast({
-          title: "Success",
-          description: "Item updated successfully",
+          title: 'Success',
+          description: 'Item updated successfully',
         });
       } else {
         await createItem(itemData, Object.keys(options).length > 0 ? options : undefined);
         toast({
-          title: "Success",
-          description: "Item created successfully",
+          title: 'Success',
+          description: 'Item created successfully',
         });
       }
 
@@ -230,9 +230,9 @@ export function ItemsPage() {
       resetItemForm();
     } catch (error) {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save item",
-        variant: "destructive",
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to save item',
+        variant: 'destructive',
       });
     }
   };
@@ -240,9 +240,9 @@ export function ItemsPage() {
   const handleSaveCategory = async () => {
     if (!categoryForm.name || !categoryForm.icon) {
       toast({
-        title: "Error",
-        description: "Category name and icon are required",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Category name and icon are required',
+        variant: 'destructive',
       });
       return;
     }
@@ -257,14 +257,14 @@ export function ItemsPage() {
       if (editingCategory) {
         await updateCategory(editingCategory.id, categoryData);
         toast({
-          title: "Success",
-          description: "Category updated successfully",
+          title: 'Success',
+          description: 'Category updated successfully',
         });
       } else {
         await createCategory(categoryData);
         toast({
-          title: "Success",
-          description: "Category created successfully",
+          title: 'Success',
+          description: 'Category created successfully',
         });
       }
 
@@ -272,9 +272,9 @@ export function ItemsPage() {
       resetCategoryForm();
     } catch (error) {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save category",
-        variant: "destructive",
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to save category',
+        variant: 'destructive',
       });
     }
   };
@@ -329,14 +329,14 @@ export function ItemsPage() {
     try {
       await deleteItem(itemId);
       toast({
-        title: "Success",
-        description: "Item deleted successfully",
+        title: 'Success',
+        description: 'Item deleted successfully',
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete item",
-        variant: "destructive",
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to delete item',
+        variant: 'destructive',
       });
     }
   };
@@ -345,14 +345,14 @@ export function ItemsPage() {
     try {
       await deleteCategory(categoryId);
       toast({
-        title: "Success",
-        description: "Category deleted successfully",
+        title: 'Success',
+        description: 'Category deleted successfully',
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete category",
-        variant: "destructive",
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to delete category',
+        variant: 'destructive',
       });
     }
   };
@@ -378,12 +378,8 @@ export function ItemsPage() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Data</h3>
-            <p className="text-gray-600 mb-4">
-              {itemsError || categoriesError}
-            </p>
-            <Button onClick={() => window.location.reload()}>
-              Retry
-            </Button>
+            <p className="text-gray-600 mb-4">{itemsError || categoriesError}</p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
           </div>
         </div>
       </div>
@@ -435,12 +431,6 @@ export function ItemsPage() {
                     <div className="flex-1">
                       <CardTitle className="text-lg flex items-center space-x-2">
                         <span>{item.name}</span>
-                        {item.isPromo && (
-                          <Badge className="bg-red-500 text-white">
-                            <Tag className="w-3 h-3 mr-1" />
-                            PROMO
-                          </Badge>
-                        )}
                       </CardTitle>
                       <p className="text-sm text-gray-600 mt-1">{item.description}</p>
                     </div>
@@ -462,10 +452,14 @@ export function ItemsPage() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <Badge variant="outline">{categories.find((cat) => cat.id === item.category)?.name || 'Unknown'}</Badge>
-                      {item.options && Object.keys(item.options).length > 0 && (
-                        <Badge className="text-xs bg-orange-500 text-white">{Object.keys(item.options).length} Options</Badge>
-                      )}
+                      {item.options && Object.keys(item.options).length > 0 && <Badge className="text-xs bg-orange-500 text-white">{Object.keys(item.options).length} Options</Badge>}
                     </div>
+                    {item.isPromo && (
+                      <Badge className="bg-red-500 text-white">
+                        <Tag className="w-3 h-3 mr-1" />
+                        PROMO
+                      </Badge>
+                    )}
                   </div>
                 </CardContent>
               </Card>
